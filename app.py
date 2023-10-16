@@ -2,8 +2,8 @@ import os
 import cv2
 import torch
 import numpy as np
-import nest_asyncio
-from pyngrok import ngrok
+# import nest_asyncio
+# from pyngrok import ngrok
 from flask import Flask, request, jsonify
 from werkzeug.utils import secure_filename
 
