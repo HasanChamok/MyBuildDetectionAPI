@@ -66,27 +66,34 @@ def detect_video(vid_path):
     
     for frame in frames:
         # results.append(model(frame).pandas().xyxy[0])
+        player , football = 0, 0
         detected = model(frame)
-        labels, confidences, Bbox = [], [], []
+        labels, confidences, Bbox, BoundBox = [], [], [], []
         for res in detected.pandas().xyxy:
             for obj in range(len(res)):
                 if res['confidence'][obj] > 0.1:  # Confidence threshold
                     label = classes[res['class'][obj]]
                     labels.append(label)
+                    if label == 'player':
+                        player+=1
+                    elif label == 'football':
+                        football+=1
                     confidence = res['confidence'][obj]
                     confidences.append(confidence)
                     (x1, y1, x2, y2) = (res['xmin'][obj],res['ymin'][obj],res['xmax'][obj],res['ymax'][obj])
                     bbox=(x1,y1,x2,y2)
                     Bbox.append(bbox)
+                    BoundBox.append(bbox)
                     # Create a dictionary for the current detection result
                     detection_result = {
                         "Frame No" : frame_no,
                         "label": label,
-                        "confidence": confidence
-                        # "bbox": bbox
+                        "confidence": confidence,
+                        "Bounding box": Bbox
                     }
                     results.append(detection_result)
-                    
+                    Bbox = []
+        print("Frame no : " , frame_no , " Player Detected : " , player , " Football Detected : " , football)          
         frame_no+=1
     # print(results)
     # print(len(results))
