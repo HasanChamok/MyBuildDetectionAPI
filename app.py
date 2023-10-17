@@ -20,13 +20,16 @@ def detect_objects(image_path):
     img = cv2.imread(image_path)
     img = cv2.resize(img, (416, 416))
     results = model(img)
-    labels, confidences = [], []
+    labels, confidences, Bbox = [], [], []
     for res in results.pandas().xyxy:
         for obj in range(len(res)):
             if res['confidence'][obj] > 0.1:  # Confidence threshold
                 labels.append(classes[res['class'][obj]])
                 confidences.append(res['confidence'][obj])
-    return labels, confidences
+                (x1, y1, x2, y2) = (res['xmin'][obj],res['ymin'][obj],res['xmax'][obj],res['ymax'][obj])
+                bbox=(x1,y1,x2,y2)
+                Bbox.append(bbox)
+    return labels, confidences, Bbox, res
 
 @app.route("/detect", methods=['POST'])
 def detect():
@@ -41,13 +44,16 @@ def detect():
     img_path = 'saved/' + img_name
     img.save(img_path)
 
-    labels, confidences = detect_objects(img_path)
+    labels, confidences, boundingBox, finalResult = detect_objects(img_path)
 
     os.remove(img_path)  # Delete the uploaded file after processing
 
+    print(finalResult)
+    
     response = {
         'labels': labels,
-        'confidences': confidences
+        'confidences': confidences,
+        'Bounding Box' : boundingBox
     }
 
     return jsonify(response)
