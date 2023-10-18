@@ -63,6 +63,7 @@ def detect_video(vid_path):
     
     frame_no = 0
     results = []
+    saved_frames = []
     
     for frame in frames:
         # results.append(model(frame).pandas().xyxy[0])
@@ -84,6 +85,13 @@ def detect_video(vid_path):
                     bbox=(x1,y1,x2,y2)
                     Bbox.append(bbox)
                     BoundBox.append(bbox)
+                    
+                    # Save the frame as an image
+                    frame_filename = f"{frame_no}_{label}_{confidence:.2f}.png"
+                    frame_path = os.path.join(app.config['UPLOAD_FOLDER'], frame_filename)
+                    cv.imwrite(frame_path, frame)
+                    saved_frames.append(frame_filename)
+                    
                     # Create a dictionary for the current detection result
                     detection_result = {
                         "Frame No" : frame_no,
@@ -137,4 +145,4 @@ def upload_file():
 
 
 if __name__ == '__main__':
-    app.run(host="0.0.0.0",port=5000)
+    app.run(debug=True)
