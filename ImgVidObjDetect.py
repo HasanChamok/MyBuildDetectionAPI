@@ -61,6 +61,12 @@ def detect_video(vid_path):
         frames.append(frame)
     cap.release()
     
+    video_name = os.path.splitext(os.path.basename(vid_path))[0]
+    video_folder = os.path.join(app.config['UPLOAD_FOLDER'], video_name)
+
+    if not os.path.exists(video_folder):
+        os.makedirs(video_folder)
+    
     frame_no = 0
     results = []
     saved_frames = []
@@ -87,10 +93,10 @@ def detect_video(vid_path):
                     BoundBox.append(bbox)
                     
                     # Save the frame as an image
-                    frame_filename = f"{frame_no}_{label}_{confidence:.2f}.png"
-                    frame_path = os.path.join(app.config['UPLOAD_FOLDER'], frame_filename)
-                    cv.imwrite(frame_path, frame)
-                    saved_frames.append(frame_filename)
+                    # frame_filename = f"{frame_no}_{label}_{confidence:.2f}.png"
+                    # frame_path = os.path.join(app.config['UPLOAD_FOLDER'], frame_filename)
+                    # cv.imwrite(frame_path, frame)
+                    # saved_frames.append(frame_filename)
                     
                     # Create a dictionary for the current detection result
                     detection_result = {
@@ -101,6 +107,31 @@ def detect_video(vid_path):
                     }
                     results.append(detection_result)
                     Bbox = []
+        # Create a copy of the original frame to draw detections on
+        frame_with_detections = frame.copy()
+        
+        for idx, bbox in enumerate(BoundBox):
+            # Draw bounding box, confidence score, and label on the frame
+            x1, y1, x2, y2 = bbox
+            label = labels[idx]
+            confidence = confidences[idx]
+
+            # Draw bounding box
+            cv.rectangle(frame_with_detections, (int(x1), int(y1)), (int(x2), int(y2)), (0, 255, 0), 2)
+
+            # Draw label and confidence score
+            text = f"{label}: {confidence:.2f}"
+            cv.putText(frame_with_detections, text, (int(x1), int(y1) - 10), cv.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2) 
+            
+            # Save the frame as an image with bounding box, label, and confidence score
+            # frame_filename = f"{frame_no}_{labels[idx]}_{confidences[idx]:.2f}.png"
+            # frame_path = os.path.join(video_folder, frame_filename)
+            # cv.imwrite(frame_path, frame)
+        # Save the frame with all detections as an image
+        frame_filename = f"{frame_no}_detections.png"
+        frame_path = os.path.join(video_folder, frame_filename)
+        cv.imwrite(frame_path, frame_with_detections)
+        
         print("Frame no : " , frame_no , " Player Detected : " , player , " Football Detected : " , football)          
         frame_no+=1
     # print(results)
