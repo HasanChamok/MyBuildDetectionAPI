@@ -30,12 +30,27 @@ with open('classes.txt','r') as f:
         classes.append(line.strip())
         
 def detect_image(img_path):
-    label , confidence, Bbox = [] , [] , []
+    # label , confidence, Bbox = [] , [] , []
+    
+    # img = cv.imread(img_path)
+    # img = cv.resize(img,(416,416))
+    # img_copy = img.copy()  # Create a copy of the original image
+    
+    
+    # results = model(img)
+    label, confidence, Bbox = [], [], []
     
     img = cv.imread(img_path)
-    img = cv.resize(img,(416,416))
+    img_copy = img.copy()  # Create a copy of the original image
     
-    results = model(img)
+    input_size = 416
+    img_height, img_width, _ = img.shape
+    scale_x, scale_y = img_width / input_size, img_height / input_size
+    
+    img_resized = cv.resize(img, (input_size, input_size))
+    
+    results = model(img_resized)
+    
     
     for res in results.pandas().xyxy:
         # print(len(res))
@@ -44,8 +59,23 @@ def detect_image(img_path):
             label.append(className)
             (x1, y1, x2, y2) = (res['xmin'][obj],res['ymin'][obj],res['xmax'][obj],res['ymax'][obj])
             bbox=(x1,y1,x2,y2)
+            # Bbox.append(bbox)
+            # confidence.append(res['confidence'][obj])
+            # Rescale the coordinates back to the original image size
+            x1, y1, x2, y2 = int(x1 * scale_x), int(y1 * scale_y), int(x2 * scale_x), int(y2 * scale_y)
+            # bbox = (x1, y1, x2, y2)
             Bbox.append(bbox)
             confidence.append(res['confidence'][obj])
+            
+            # Draw bounding box, confidence score, and label on the copy of the image
+            cv.rectangle(img_copy, (x1, y1), (x2, y2), (0, 255, 0), 2)
+            text = f"{className}: {res['confidence'][obj]:.2f}"
+            cv.putText(img_copy, text, (x1, y1 - 10), cv.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
+            
+    # Save the modified image with bounding boxes, confidence scores, and labels
+    img_name = os.path.splitext(os.path.basename(img_path))[0] + "_detections.png"
+    img_save_path = os.path.join(app.config['UPLOAD_FOLDER'], img_name)
+    cv.imwrite(img_save_path, img_copy)
     
     return label , confidence, Bbox 
 
